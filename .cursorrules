@@ -1,0 +1,12 @@
+# .cursorrules — web (Next.js)
+
+1. Stack is fixed: Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui. Do not introduce other UI kits.
+2. Prefer Server Components; add `"use client"` only when browser state/effects are required.
+3. All DB/auth goes through Supabase clients in `src/lib/supabase/`. Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser.
+4. Respect RLS; do not bypass it from client code.
+5. Payment/webhook routes (future) must verify signatures — never trust raw webhook bodies.
+6. New pages/components must match PRD.md §5.2 routes: `/`, `/upload`, `/gallery`, `/pet/:petId`, `/login`, `/register`, `/account`, `/pricing`.
+7. Do not store auth tokens in `localStorage`; use Supabase Auth session cookies/helpers.
+8. Image generation is async via `generation_jobs` — never block a request waiting for AI/pixelization to finish.
+9. On errors: briefly explain why, then fix.
+10. Keep landing SEO metadata in `src/app/layout.tsx` (title, description, Open Graph).

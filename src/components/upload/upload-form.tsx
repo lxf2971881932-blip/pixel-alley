@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Script from "next/script";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,23 +12,16 @@ import {
   SyncReadyModal,
 } from "@/components/upload/generate-modals";
 import {
-  LEMON_CHECKOUT_CREDITS,
-  LEMON_CHECKOUT_PREMIUM,
-} from "@/lib/lemonsqueezy";
-import {
-  ensureLemonJs,
-  openLemonCheckout,
-  type LemonCheckoutKind,
-  type LemonJsEvent,
-} from "@/lib/lemonsqueezy-client";
-import { CHROME_STORE_URL } from "@/components/home/home-hero-cta";
-import { cn } from "@/lib/utils";
+  GUMROAD_CHECKOUT_CREDITS,
+  GUMROAD_CHECKOUT_PREMIUM,
+  PREMIUM_PRICE_LABEL,
+  openGumroadCheckout,
+  type CheckoutKind,
+} from "@/lib/checkout";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPT = ["image/jpeg", "image/png"];
 const FREEMIUM_KEY = "pixel-alley-freemium";
-const PREMIUM_UNLOCK_CREDITS = 3;
-const CREDIT_PACK_SIZE = 5;
 
 type Phase =
   | "idle"
@@ -79,8 +71,6 @@ export function UploadForm({ configured }: { configured: boolean }) {
   const [freemiumReady, setFreemiumReady] = useState(false);
   const [paying, setPaying] = useState<"premium" | "credits" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [showPaymentGuide, setShowPaymentGuide] = useState(false);
-  const pendingCheckout = useRef<LemonCheckoutKind | null>(null);
 
   useEffect(() => {
     try {
@@ -118,48 +108,16 @@ export function UploadForm({ configured }: { configured: boolean }) {
     return () => window.clearTimeout(t);
   }, [toast]);
 
-  const onLemonEvent = useCallback((event: LemonJsEvent) => {
-    if (event.event !== "Checkout.Success") return;
-
-    const kind = pendingCheckout.current;
-    pendingCheckout.current = null;
-    setPaying(null);
-
-    if (kind === "credits") {
-      setGenerationCredits((c) => c + CREDIT_PACK_SIZE);
-      setToast(`Payment successful — +${CREDIT_PACK_SIZE} credits added!`);
-      return;
-    }
-
-    // Default / premium unlock
-    setIsPremium(true);
-    setGenerationCredits(PREMIUM_UNLOCK_CREDITS);
-    setShowPaymentGuide(true);
-    setToast("Payment Successful! Check your email for your License Key.");
-  }, []);
-
-  useEffect(() => {
-    ensureLemonJs(onLemonEvent);
-  }, [onLemonEvent]);
-
-  function startCheckout(kind: LemonCheckoutKind) {
+  function startCheckout(kind: CheckoutKind) {
     setError(null);
     setPaying(kind);
-    pendingCheckout.current = kind;
     const url =
-      kind === "premium" ? LEMON_CHECKOUT_PREMIUM : LEMON_CHECKOUT_CREDITS;
-    const openedOverlay = openLemonCheckout(url, onLemonEvent);
-    if (!openedOverlay) {
-      setToast(
-        "Checkout opened in a new tab. After paying, return here and refresh if needed.",
-      );
-    }
-    // Overlay close without success: clear "paying" spinner after a beat
-    window.setTimeout(() => {
-      if (pendingCheckout.current === kind) {
-        setPaying(null);
-      }
-    }, 1500);
+      kind === "premium" ? GUMROAD_CHECKOUT_PREMIUM : GUMROAD_CHECKOUT_CREDITS;
+    openGumroadCheckout(url);
+    setToast(
+      "Checkout opened on Gumroad. After paying, check your email for your receipt / access details.",
+    );
+    window.setTimeout(() => setPaying(null), 1200);
   }
 
   const onPick = useCallback((next: File | null) => {
@@ -396,13 +354,6 @@ export function UploadForm({ configured }: { configured: boolean }) {
 
   return (
     <>
-      <Script
-        src="https://assets.lemonsqueezy.com/lemon.js"
-        strategy="afterInteractive"
-        onLoad={() => {
-          ensureLemonJs(onLemonEvent);
-        }}
-      />
       <GeneratingModal
         open={modal === "waiting"}
         step={
@@ -452,7 +403,7 @@ export function UploadForm({ configured }: { configured: boolean }) {
                   Bring Your Pet Home - Premium Unlock
                 </h2>
                 <p className="mt-3 inline-block rounded-lg border border-[#ff77a8]/50 bg-[#ff77a8]/10 px-3 py-1.5 font-pixel text-[10px] text-white shadow-[0_0_12px_rgba(255,119,168,0.25)]">
-                  $6.99 / Lifetime Access
+                  {PREMIUM_PRICE_LABEL} / Lifetime Access
                 </p>
               </div>
 
@@ -481,46 +432,13 @@ export function UploadForm({ configured }: { configured: boolean }) {
               </button>
 
               <p className="font-mono text-sm leading-relaxed text-gray-400">
-                Secure checkout via Lemon Squeezy. After payment, check your
-                email for your License Key.
+                Secure checkout via Gumroad. After payment, check your email for
+                your receipt and follow the product instructions to claim your
+                pet.
               </p>
             </div>
           ) : (
             <>
-              {showPaymentGuide ? (
-                <div className="mb-4 rounded-xl border-2 border-[#ff77a8] bg-[#ff77a8]/10 p-4 shadow-[0_0_18px_rgba(255,119,168,0.3)]">
-                  <p className="font-pixel text-[9px] leading-relaxed text-[#ff77a8]">
-                    Payment Successful!
-                  </p>
-                  <p className="mt-2 font-mono text-sm leading-relaxed text-gray-200">
-                    Please check your email for your exclusive License Key.
-                  </p>
-                  <ol className="mt-3 space-y-2 font-mono text-sm text-gray-300">
-                    <li>
-                      1. Click{" "}
-                      <strong className="text-white">Get Extension</strong> to
-                      install Pixel Alley.
-                    </li>
-                    <li>
-                      2. Open a New Tab and enter your License Key to bring your
-                      pet home.
-                    </li>
-                  </ol>
-                  <a
-                    href={CHROME_STORE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "mt-4 inline-flex w-full items-center justify-center rounded-sm border-2 border-[#ff77a8]",
-                      "bg-[#ff0055]/25 px-4 py-3 font-pixel text-[10px] uppercase text-white",
-                      "shadow-[0_0_16px_rgba(255,119,168,0.4)] transition hover:bg-[#ff0055]/40",
-                    )}
-                  >
-                    Get Extension
-                  </a>
-                </div>
-              ) : null}
-
               <p className="mb-3 font-mono text-lg leading-relaxed text-gray-300">
                 Upload JPG/PNG (≤10MB). We craft one midnight-lofi pixel pet, then
                 give you a sync code for the Chrome new-tab alley.
@@ -579,7 +497,7 @@ export function UploadForm({ configured }: { configured: boolean }) {
                   >
                     {paying === "credits"
                       ? "Opening checkout…"
-                      : "Out of credits? Get 5 more for $1.99"}
+                      : `Out of credits? Get more via Gumroad (${PREMIUM_PRICE_LABEL})`}
                   </button>
                 ) : null}
 

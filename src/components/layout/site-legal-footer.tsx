@@ -48,13 +48,13 @@ const POLICIES: Record<
         <p>
           Pixel Alley respects your privacy. This policy describes what we
           collect and how we use it when you visit our site, purchase through
-          Lemon Squeezy, or use our extension.
+          Gumroad, or use our extension.
         </p>
         <p>
           <strong className="text-white">Information we collect.</strong> Account
           or guest identifiers, uploaded pet photos for generation, generation
           job metadata, and purchase-related details processed by our payment
-          provider (Lemon Squeezy). The extension may store sync/license data
+          provider (Gumroad). The extension may store sync/license data
           locally in your browser.
         </p>
         <p>
@@ -64,7 +64,7 @@ const POLICIES: Record<
         </p>
         <p>
           <strong className="text-white">Third parties.</strong> Payments and
-          licensing are handled by Lemon Squeezy under their privacy practices.
+          licensing are handled by Gumroad under their privacy practices.
           Hosting and storage providers may process data to run the service.
         </p>
         <p>

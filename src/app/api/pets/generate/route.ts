@@ -12,6 +12,22 @@ type Body = {
   name?: string;
 };
 
+/** Avoid UTF-8 mangling of PNG bytes when Supabase Storage uploads via fetch. */
+function pngBlob(buf: Buffer): Blob {
+  if (
+    buf.length < 8 ||
+    buf[0] !== 0x89 ||
+    buf[1] !== 0x50 ||
+    buf[2] !== 0x4e ||
+    buf[3] !== 0x47
+  ) {
+    throw new Error(
+      `Refusing to upload non-PNG bytes (header=${buf.subarray(0, 4).toString("hex")})`,
+    );
+  }
+  return new Blob([Uint8Array.from(buf)], { type: "image/png" });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -111,7 +127,7 @@ export async function POST(request: Request) {
     const spritePath = `${userId}/${petId}/sprite.png`;
     const { error: spriteUploadError } = await admin.storage
       .from("pet-sprites")
-      .upload(spritePath, sprite, {
+      .upload(spritePath, pngBlob(sprite), {
         contentType: "image/png",
         upsert: true,
       });
@@ -128,10 +144,12 @@ export async function POST(request: Request) {
       const urls: string[] = [];
       for (let i = 0; i < buffers.length; i++) {
         const path = `${userId}/${petId}/${type}-${i}.png`;
-        const { error } = await admin.storage.from("pet-sprites").upload(path, buffers[i], {
-          contentType: "image/png",
-          upsert: true,
-        });
+        const { error } = await admin.storage
+          .from("pet-sprites")
+          .upload(path, pngBlob(buffers[i]), {
+            contentType: "image/png",
+            upsert: true,
+          });
         if (error) throw new Error(error.message);
         urls.push(`${publicBase}/storage/v1/object/public/pet-sprites/${path}`);
       }

@@ -199,7 +199,20 @@ async function pollGeneration(generationId: string): Promise<Buffer> {
       if (!url) throw new Error("Leonardo generation completed with no image");
       const imgRes = await proxyFetch(url);
       if (!imgRes.ok) throw new Error("Failed to download Leonardo image");
-      return Buffer.from(await imgRes.arrayBuffer());
+      const bytes = Buffer.from(new Uint8Array(await imgRes.arrayBuffer()));
+      if (
+        bytes.length < 8 ||
+        // PNG or JPEG (Leonardo may return either depending on model)
+        !(
+          (bytes[0] === 0x89 && bytes[1] === 0x50) ||
+          (bytes[0] === 0xff && bytes[1] === 0xd8)
+        )
+      ) {
+        throw new Error(
+          `Leonardo returned non-image bytes (header=${bytes.subarray(0, 4).toString("hex")})`,
+        );
+      }
+      return bytes;
     }
 
     if (status === "FAILED") {

@@ -22,6 +22,10 @@ import {
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPT = ["image/jpeg", "image/png"];
 const FREEMIUM_KEY = "pixel-alley-freemium";
+const PREMIUM_UNLOCK_CREDITS = 3;
+
+/** Query flags that unlock Premium after a Gumroad purchase. */
+const PURCHASE_UNLOCK_PARAMS = ["purchased", "unlocked", "premium"] as const;
 
 type Phase =
   | "idle"
@@ -72,17 +76,50 @@ export function UploadForm({ configured }: { configured: boolean }) {
   const [paying, setPaying] = useState<"premium" | "credits" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  function unlockPremium(reason: "url" | "claim") {
+    setIsPremium(true);
+    setGenerationCredits((c) => Math.max(c, PREMIUM_UNLOCK_CREDITS));
+    setToast(
+      reason === "url"
+        ? "Purchase confirmed — Premium unlocked. Upload your pet photo!"
+        : "Premium unlocked. Upload your pet photo to get your sync code.",
+    );
+  }
+
   useEffect(() => {
+    let unlockedFromUrl = false;
     try {
+      const params = new URLSearchParams(window.location.search);
+      unlockedFromUrl = PURCHASE_UNLOCK_PARAMS.some((key) => {
+        const v = (params.get(key) || "").toLowerCase();
+        return v === "1" || v === "true" || v === "yes";
+      });
+
       const raw = window.localStorage.getItem(FREEMIUM_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as FreemiumState;
-        setIsPremium(Boolean(parsed.isPremium));
+        setIsPremium(Boolean(parsed.isPremium) || unlockedFromUrl);
         setGenerationCredits(
-          Number.isFinite(parsed.generationCredits)
-            ? Math.max(0, Math.floor(parsed.generationCredits))
-            : 0,
+          Math.max(
+            unlockedFromUrl ? PREMIUM_UNLOCK_CREDITS : 0,
+            Number.isFinite(parsed.generationCredits)
+              ? Math.max(0, Math.floor(parsed.generationCredits))
+              : 0,
+          ),
         );
+      } else if (unlockedFromUrl) {
+        setIsPremium(true);
+        setGenerationCredits(PREMIUM_UNLOCK_CREDITS);
+      }
+
+      if (unlockedFromUrl) {
+        setToast(
+          "Purchase confirmed — Premium unlocked. Upload your pet photo!",
+        );
+        // Clean the URL so refresh does not keep flashing the toast.
+        const url = new URL(window.location.href);
+        for (const key of PURCHASE_UNLOCK_PARAMS) url.searchParams.delete(key);
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
       }
     } catch {
       /* ignore */
@@ -115,7 +152,7 @@ export function UploadForm({ configured }: { configured: boolean }) {
       kind === "premium" ? GUMROAD_CHECKOUT_PREMIUM : GUMROAD_CHECKOUT_CREDITS;
     openGumroadCheckout(url);
     setToast(
-      "Checkout opened on Gumroad. After paying, check your email for your receipt / access details.",
+      "Checkout opened on Gumroad. After paying, use the receipt link (or tap Already purchased below).",
     );
     window.setTimeout(() => setPaying(null), 1200);
   }
@@ -431,10 +468,18 @@ export function UploadForm({ configured }: { configured: boolean }) {
                 {paying === "premium" ? "Opening checkout…" : "Unlock Premium Now"}
               </button>
 
+              <button
+                type="button"
+                disabled={!freemiumReady}
+                onClick={() => unlockPremium("claim")}
+                className="w-full text-center font-mono text-sm text-[#7dd3fc] underline decoration-[#7dd3fc]/50 underline-offset-4 transition hover:text-white disabled:opacity-60"
+              >
+                Already purchased on Gumroad? Continue to upload
+              </button>
+
               <p className="font-mono text-sm leading-relaxed text-gray-400">
-                Secure checkout via Gumroad. After payment, check your email for
-                your receipt and follow the product instructions to claim your
-                pet.
+                Secure checkout via Gumroad. After payment, open the receipt
+                link (or tap above) to unlock upload on this site.
               </p>
             </div>
           ) : (

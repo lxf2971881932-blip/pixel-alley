@@ -297,7 +297,9 @@ export function UploadForm({ configured }: { configured: boolean }) {
       return;
     }
     if (!configured) {
-      setError("Supabase is not configured.");
+      setError(
+        "Supabase is not configured on this deployment. In Vercel → Settings → Environment Variables, add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY, then Redeploy.",
+      );
       return;
     }
     if (!file) {

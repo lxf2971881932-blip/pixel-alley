@@ -1,3 +1,4 @@
+import { BrandHero } from "@/components/brand/brand-mark";
 import { HomeHeroCta } from "@/components/home/home-hero-cta";
 
 /** Mini mock of the Chrome new-tab product (finished look). */
@@ -72,9 +73,7 @@ export default function HomePage() {
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
         {/* Hero — centered */}
         <section className="flex flex-col items-center text-center">
-          <h1 className="font-pixel neon-brand text-4xl uppercase leading-tight tracking-wide sm:text-6xl">
-            Pixel Alley
-          </h1>
+          <BrandHero />
           <p className="mt-5 max-w-xl font-mono text-lg text-[#7dd3fc] sm:text-xl">
             Turn your pet into a midnight lo-fi companion.
           </p>

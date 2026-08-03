@@ -141,8 +141,17 @@ export function SiteLegalFooter() {
             </span>
           ))}
         </nav>
-        <p className="mt-3 text-center text-xs text-gray-600">
-          © {new Date().getFullYear()} Pixel Alley
+        <p className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-600">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/pixel-alley-cat-logo-32.png"
+            alt=""
+            width={16}
+            height={16}
+            className="pixelated opacity-80"
+            style={{ imageRendering: "pixelated" }}
+          />
+          <span>© {new Date().getFullYear()} Pixel Alley</span>
         </p>
       </footer>
 

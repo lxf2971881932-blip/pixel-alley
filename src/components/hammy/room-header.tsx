@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand/brand-mark";
 import { PixelPaw, PixelPlant, PixelYarn, PixelBone } from "@/components/hammy/pixel-icons";
 
 export function RoomHeader() {
@@ -18,9 +19,7 @@ export function RoomHeader() {
         <PixelBone size={34} />
       </div>
 
-      <h1 className="font-pixel neon-brand text-3xl uppercase leading-tight sm:text-5xl">
-        Pixel Alley
-      </h1>
+      <BrandMark size={56} href={false} layout="stack" />
 
       <p className="mt-5 max-w-xl px-4 font-mono text-lg leading-relaxed text-gray-300 sm:text-xl">
         Upload a photo of your pet and let them wait for you in the Midnight

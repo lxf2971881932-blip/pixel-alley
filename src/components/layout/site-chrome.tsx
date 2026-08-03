@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,12 +11,7 @@ export function SiteHeader({
 }) {
   return (
     <header className="relative z-20 mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
-      <Link
-        href="/"
-        className="font-pixel neon-brand text-[11px] uppercase leading-tight sm:text-sm"
-      >
-        Pixel Alley
-      </Link>
+      <BrandMark size={36} />
       <nav className="flex flex-wrap items-center justify-end gap-2">
         {active !== "upload" ? (
           <Link

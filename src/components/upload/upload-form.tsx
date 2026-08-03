@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { PixelPanel } from "@/components/layout/site-chrome";
 import { PixelPaw } from "@/components/hammy/pixel-icons";
 import {
@@ -420,11 +421,9 @@ export function UploadForm({ configured }: { configured: boolean }) {
         </div>
       ) : null}
 
-      <div className="mb-2 w-full max-w-4xl text-center lg:text-left">
-        <h1 className="font-pixel neon-brand text-2xl uppercase leading-relaxed sm:text-3xl">
-          Pixel Alley
-        </h1>
-        <p className="mt-3 font-mono text-lg leading-relaxed text-gray-300">
+      <div className="mb-2 flex w-full max-w-4xl flex-col items-center gap-3 text-center lg:items-start lg:text-left">
+        <BrandMark size={48} href={false} className="justify-center lg:justify-start" />
+        <p className="font-mono text-lg leading-relaxed text-gray-300">
           {isPremium
             ? "Upload a photo of your pet and let them wait for you in the Midnight Pixel Alley."
             : "Peek into the Midnight Pixel Alley — unlock Premium to bring your own pet home."}
